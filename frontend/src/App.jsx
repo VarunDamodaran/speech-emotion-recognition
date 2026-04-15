@@ -110,7 +110,6 @@ export default function App() {
   const wsRef = useRef(null)
   const intervalRef = useRef(null)
   
-  
   const isRecordingRef = useRef(false)
 
   useEffect(() => {
@@ -137,7 +136,6 @@ export default function App() {
           [formattedEmotion]: (prev[formattedEmotion] || 0) + 1
         }))
       } else {
-        // ADD THIS: Catch any backend errors so it doesn't fail silently
         console.error("Backend processing error:", data.message || "Unknown error");
       }
     }
@@ -158,13 +156,11 @@ export default function App() {
           setTelemetry({
             p95: data.p95_latency_ms || "--",
             p99: data.p99_latency_ms || "--",
-           
             lowConfidence: data.low_confidence_rate_percentage ?? "0.0",
             silenceRate: data.silent_rejection_percentage ?? "0.0" 
           });
         }
       } catch (e) {
-  
       }
     }, 3000);
 
@@ -181,7 +177,6 @@ export default function App() {
       setEmotionHistory([])
       setEmotion("Neutral")
 
-      
       isRecordingRef.current = true
       setIsRecording(true)
       
@@ -200,7 +195,6 @@ export default function App() {
       intervalRef.current = setInterval(() => {
         if (recorderRef.current && isRecordingRef.current) {
           recorderRef.current.stopRecording(async () => {
-        
             if (!isRecordingRef.current) return;
 
             const blob = recorderRef.current.getBlob()
@@ -215,10 +209,8 @@ export default function App() {
   }
 
   const stopRecording = () => {
-    
     isRecordingRef.current = false;
 
-   
     if (intervalRef.current) clearInterval(intervalRef.current)
     if (recorderRef.current) {
       recorderRef.current.destroy()
@@ -232,7 +224,6 @@ export default function App() {
     setAudioStream(null) 
     setIsRecording(false)
     
-   
     setEmotionHistory([])
     setEmotion("Disconnected") 
     setLatency("--")
@@ -241,64 +232,84 @@ export default function App() {
   return (
     <div className="relative w-screen h-screen bg-[#030712] text-white font-sans overflow-hidden">
       
+      {/* BACKGROUND: 3D Core */}
       <SentientCore emotion={emotion} stream={audioStream} />
 
-      <div className="absolute inset-0 z-10 pointer-events-none p-8">
+      {/* FOREGROUND: Responsive Flex Grid */}
+      <div className="absolute inset-0 z-10 p-4 md:p-8 flex flex-col justify-between pointer-events-none">
         
-        {/* TOP LEFT: Title & Action Area */}
-        <div className="absolute top-8 left-8 flex items-center gap-6 pointer-events-auto">
-          <button 
-            onClick={isRecording ? stopRecording : startRecording}
-            className="relative flex items-center justify-center w-14 h-14 rounded-full border border-white/10 bg-black/40 backdrop-blur-md hover:bg-white/10 transition-all group shadow-xl"
-          >
-            <div className={`w-4 h-4 rounded-full transition-colors duration-500 ${
-              isRecording ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]' : 'bg-slate-300'
-            }`} />
-            {isRecording && <div className="absolute inset-0 rounded-full border border-red-500 animate-ping opacity-30"></div>}
-          </button>
-          <div className="flex flex-col">
-            <h1 className="text-xl font-light tracking-[0.2em] text-slate-200 uppercase">
-              Audio <span className="font-bold text-blue-400">Intelligence</span>
-            </h1>
-            <p className="text-[10px] font-mono tracking-widest text-slate-500 mt-1 uppercase">
-              {isRecording ? "Live Inference Active" : "System Standby"}
-            </p>
+        {/* TOP SECTION: Header & Telemetry */}
+        <div className="flex flex-col md:flex-row justify-between items-start w-full gap-6">
+          
+          {/* Title & Action Button */}
+          <div className="flex flex-col items-start gap-5 pointer-events-auto">
+            <div className="flex flex-col">
+              <h1 className="text-xl md:text-2xl font-light tracking-[0.2em] text-slate-200 uppercase drop-shadow-md">
+                Audio <span className="font-bold text-blue-400">Intelligence</span>
+              </h1>
+              <p className="text-[10px] md:text-xs font-mono tracking-widest text-slate-500 mt-1 uppercase">
+                {isRecording ? "Live Inference Active" : "System Standby"}
+              </p>
+            </div>
+
+            {/* NEW INTUITIVE RECORD BUTTON */}
+            <button 
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`flex items-center gap-3 px-6 py-3 rounded-full font-bold tracking-widest text-xs md:text-sm uppercase transition-all shadow-xl group
+                ${isRecording 
+                  ? "bg-red-500/10 border border-red-500/50 text-red-400 hover:bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]" 
+                  : "bg-blue-600 border border-transparent text-white hover:bg-blue-500 shadow-blue-500/20"
+                }`}
+            >
+              {isRecording ? (
+                <>
+                  <div className="relative flex items-center justify-center w-3 h-3">
+                    <div className="absolute w-2 h-2 rounded-sm bg-red-500" />
+                    <div className="absolute inset-0 rounded-sm border border-red-500 animate-ping opacity-50" />
+                  </div>
+                  Stop Stream
+                </>
+              ) : (
+                <>
+                  <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
+                  Start Inference
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Telemetry Dashboard (Hidden on mobile, visible on md+) */}
+          <div className="hidden md:flex w-72 flex-col gap-5 bg-black/40 backdrop-blur-xl border border-white/10 p-6 rounded-3xl pointer-events-auto shadow-2xl">
+            <div className="flex flex-col gap-3 border-b border-white/5 pb-5">
+              <div className="flex justify-between items-end">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Latest Latency</span>
+                <span className="text-lg font-mono text-slate-200 leading-none">{latency} <span className="text-[10px] text-slate-500">ms</span></span>
+              </div>
+              <div className="flex justify-between items-end">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">P95 Latency</span>
+                <span className="text-lg font-mono text-slate-200 leading-none">{telemetry.p95} <span className="text-[10px] text-slate-500">ms</span></span>
+              </div>
+              <div className="flex justify-between items-end">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">P99 Latency</span>
+                <span className="text-lg font-mono text-slate-200 leading-none">{telemetry.p99} <span className="text-[10px] text-slate-500">ms</span></span>
+              </div>
+              <div className="flex justify-between items-end">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Low Confidence</span>
+                <span className="text-lg font-mono text-slate-200 leading-none">{telemetry.lowConfidence} <span className="text-[10px] text-slate-500">%</span></span>
+              </div>
+              <div className="flex justify-between items-end">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Silence Rejected</span>
+                <span className="text-lg font-mono text-slate-200 leading-none">{telemetry.silenceRate} <span className="text-[10px] text-slate-500">%</span></span>
+              </div>
+            </div>
+            <div className="pt-2">
+              <SpiderGraph distribution={emotionDistribution} />
+            </div>
           </div>
         </div>
 
-        {/* RIGHT SIDEBAR: Telemetry & Spider Graph HUD */}
-        <div className="absolute top-8 right-8 w-72 flex flex-col gap-5 bg-black/40 backdrop-blur-xl border border-white/10 p-6 rounded-3xl pointer-events-auto shadow-2xl">
-          
-          <div className="flex flex-col gap-3 border-b border-white/5 pb-5">
-            <div className="flex justify-between items-end">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Latest Latency</span>
-              <span className="text-lg font-mono text-slate-200 leading-none">{latency} <span className="text-[10px] text-slate-500">ms</span></span>
-            </div>
-            <div className="flex justify-between items-end">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">P95 Latency</span>
-              <span className="text-lg font-mono text-slate-200 leading-none">{telemetry.p95} <span className="text-[10px] text-slate-500">ms</span></span>
-            </div>
-            <div className="flex justify-between items-end">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">P99 Latency</span>
-              <span className="text-lg font-mono text-slate-200 leading-none">{telemetry.p99} <span className="text-[10px] text-slate-500">ms</span></span>
-            </div>
-            <div className="flex justify-between items-end">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Low Confidence</span>
-              <span className="text-lg font-mono text-slate-200 leading-none">{telemetry.lowConfidence} <span className="text-[10px] text-slate-500">%</span></span>
-            </div>
-            <div className="flex justify-between items-end">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Silence Rejected</span>
-              <span className="text-lg font-mono text-slate-200 leading-none">{telemetry.silenceRate} <span className="text-[10px] text-slate-500">%</span></span>
-            </div>
-          </div>
-          
-          <div className="pt-2">
-            <SpiderGraph distribution={emotionDistribution} />
-          </div>
-        </div>
-
-        {/* BOTTOM LEFT: Localized Emotion Timeline */}
-        <div className="absolute bottom-8 left-8 w-[400px] flex flex-col justify-end pointer-events-auto">
+        {/* BOTTOM SECTION: Timeline */}
+        <div className="w-full md:w-[400px] flex flex-col justify-end pointer-events-auto pb-4 md:pb-0">
           
           <AnimatePresence mode="wait">
             <motion.div 
@@ -306,7 +317,7 @@ export default function App() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
-              className="text-2xl font-bold tracking-widest uppercase drop-shadow-2xl mb-4"
+              className="text-2xl md:text-3xl font-bold tracking-widest uppercase drop-shadow-2xl mb-3 md:mb-4"
               style={{ color: EMOTION_COLORS[emotion] || "#fff" }}
             >
               {emotion}
@@ -336,7 +347,7 @@ export default function App() {
             {emotionHistory.length === 0 && <div className="w-full h-full bg-slate-800/50 rounded-full" />}
           </div>
           
-          <p className="text-[9px] font-mono tracking-widest text-slate-500 uppercase mt-3">
+          <p className="text-[9px] md:text-[10px] font-mono tracking-widest text-slate-500 uppercase mt-3">
             Temporal Sequence Log
           </p>
         </div>

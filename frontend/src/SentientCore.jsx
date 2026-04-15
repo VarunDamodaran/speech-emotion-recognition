@@ -1,9 +1,8 @@
 import React, { useRef, useMemo, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { createNoise3D } from 'simplex-noise';
-
 
 const EMOTION_COLORS = {
   neutral: new THREE.Color('#94a3b8'), 
@@ -22,10 +21,13 @@ function CoreSphere({ emotion, stream }) {
   const noise3D = useMemo(() => createNoise3D(), []);
   const targetColor = useMemo(() => new THREE.Color(), []);
   
-
   const analyserRef = useRef(null);
   const dataArrayRef = useRef(null);
 
+  // RESPONSIVE 3D SIZING: Detect viewport and scale down on mobile
+  const { viewport } = useThree();
+  const isMobile = viewport.width < 5; 
+  const scaleFactor = isMobile ? 0.65 : 1; // 35% smaller on phones
 
   const geometry = useMemo(() => {
     const geo = new THREE.IcosahedronGeometry(1.75, 32); 
@@ -59,7 +61,6 @@ function CoreSphere({ emotion, stream }) {
   useFrame((state, delta) => {
     if (!meshRef.current) return;
 
-    
     const safeEmotion = emotion ? emotion.toLowerCase() : 'disconnected';
     targetColor.copy(EMOTION_COLORS[safeEmotion] || EMOTION_COLORS.neutral);
     meshRef.current.material.color.lerp(targetColor, delta * 3);
@@ -68,10 +69,8 @@ function CoreSphere({ emotion, stream }) {
     if (analyserRef.current && dataArrayRef.current) {
       analyserRef.current.getByteFrequencyData(dataArrayRef.current);
       const sum = dataArrayRef.current.reduce((a, b) => a + b, 0);
-    
       audioPulse = (sum / dataArrayRef.current.length) / 255.0; 
     }
-
 
     const positions = meshRef.current.geometry.attributes.position;
     const time = state.clock.getElapsedTime();
@@ -82,13 +81,11 @@ function CoreSphere({ emotion, stream }) {
       const z = basePositions[i * 3 + 2];
       const vertex = new THREE.Vector3(x, y, z).normalize();
 
-    
       const noise = noise3D(
         vertex.x * 1.5 + time * 0.4,
         vertex.y * 1.5 + time * 0.4,
         vertex.z * 1.5
       );
-
       
       const displacement = 1.1 * noise * audioPulse;
       const finalRadius = 1.75 + displacement; 
@@ -100,7 +97,7 @@ function CoreSphere({ emotion, stream }) {
   });
 
   return (
-    <mesh ref={meshRef} geometry={geometry}>
+    <mesh ref={meshRef} geometry={geometry} scale={[scaleFactor, scaleFactor, scaleFactor]}>
       <meshBasicMaterial wireframe={true} transparent={true} opacity={0.6} />
     </mesh>
   );
