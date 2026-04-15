@@ -114,7 +114,8 @@ export default function App() {
   const isRecordingRef = useRef(false)
 
   useEffect(() => {
-    const ws = new WebSocket("ws://127.0.0.1:8000/ws/stream")
+    const WS_URL = import.meta.env.VITE_WS_URL || "ws://127.0.0.1:8000/ws/stream";
+    const ws = new WebSocket(WS_URL);
     
     ws.onopen = () => {
       console.log("Connected to ML Server")
