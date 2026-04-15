@@ -16,7 +16,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-WEIGHTS_PATH = 'C:/Users/Varun Damodaran/Desktop/audio_new/ml/cnn_transf_parallel_model.pt'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+WEIGHTS_PATH = os.path.join(BASE_DIR, "ml", "cnn_transf_parallel_model.pt")
+print(f"Loading model from: {WEIGHTS_PATH}")
 MODEL = load_model(weights_path=WEIGHTS_PATH)
 
 metrics_store = {
