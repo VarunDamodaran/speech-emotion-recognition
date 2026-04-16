@@ -49,6 +49,10 @@ def run_ml_inference(audio_chunk: bytes):
 async def predict_emotion(audio_chunk: bytes):
     return await asyncio.to_thread(run_ml_inference, audio_chunk)
 
+@app.get("/health")
+async def health_check():
+    """some light endpoint for keeping this awake."""
+    return {"status": "alive"}
 
 @app.websocket("/ws/stream")
 async def audio_stream_endpoint(websocket: WebSocket):

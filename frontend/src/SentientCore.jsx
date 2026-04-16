@@ -1,5 +1,5 @@
-import React, { useRef, useMemo, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { createNoise3D } from 'simplex-noise';
@@ -24,10 +24,28 @@ function CoreSphere({ emotion, stream }) {
   const analyserRef = useRef(null);
   const dataArrayRef = useRef(null);
 
-  // RESPONSIVE 3D SIZING: Detect viewport and scale down on mobile
-  const { viewport } = useThree();
-  const isMobile = viewport.width < 5; 
-  const scaleFactor = isMobile ? 0.65 : 1; // 35% smaller on phones
+  // BULLETPROOF RESPONSIVE SCALING
+  const [scaleFactor, setScaleFactor] = useState(1);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 768) {
+        setScaleFactor(0.45); // Aggressive scale down for Phones
+      } else if (width < 1024) {
+        setScaleFactor(0.75); // Moderate scale for Tablets
+      } else {
+        setScaleFactor(1);    // Full size for Desktop
+      }
+    };
+    
+    // Set initial size
+    handleResize(); 
+    
+    // Update size if user rotates their phone
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const geometry = useMemo(() => {
     const geo = new THREE.IcosahedronGeometry(1.75, 32); 
@@ -97,6 +115,7 @@ function CoreSphere({ emotion, stream }) {
   });
 
   return (
+    // Apply the dynamic scale factor here
     <mesh ref={meshRef} geometry={geometry} scale={[scaleFactor, scaleFactor, scaleFactor]}>
       <meshBasicMaterial wireframe={true} transparent={true} opacity={0.6} />
     </mesh>

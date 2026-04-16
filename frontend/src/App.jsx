@@ -230,7 +230,7 @@ export default function App() {
   }
 
   return (
-    <div className="relative w-screen h-screen bg-[#030712] text-white font-sans overflow-hidden">
+    <div className="relative w-screen h-[100dvh] bg-[#030712] text-white font-sans overflow-hidden">
       
       {/* BACKGROUND: 3D Core */}
       <SentientCore emotion={emotion} stream={audioStream} />
@@ -252,7 +252,7 @@ export default function App() {
               </p>
             </div>
 
-            {/* NEW INTUITIVE RECORD BUTTON */}
+            {/*record */}
             <button 
               onClick={isRecording ? stopRecording : startRecording}
               className={`flex items-center gap-3 px-6 py-3 rounded-full font-bold tracking-widest text-xs md:text-sm uppercase transition-all shadow-xl group
@@ -278,7 +278,7 @@ export default function App() {
             </button>
           </div>
 
-          {/* Telemetry Dashboard (Hidden on mobile, visible on md+) */}
+          {/* Telemetry Dashboard*/}
           <div className="hidden md:flex w-72 flex-col gap-5 bg-black/40 backdrop-blur-xl border border-white/10 p-6 rounded-3xl pointer-events-auto shadow-2xl">
             <div className="flex flex-col gap-3 border-b border-white/5 pb-5">
               <div className="flex justify-between items-end">
@@ -308,7 +308,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* BOTTOM SECTION: Timeline */}
+        {/* Timeline */}
         <div className="w-full md:w-[400px] flex flex-col justify-end pointer-events-auto pb-4 md:pb-0">
           
           <AnimatePresence mode="wait">
